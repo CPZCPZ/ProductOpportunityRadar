@@ -1,0 +1,70 @@
+# 来源 -> 推广渠道速查。新手用：拿到机会后知道"同类人群在哪、第一步做什么"。
+# key 用采集器返回的 source 字段（小写）来匹配；匹配不到则用 default。
+
+default:
+  audience: 该需求的同类潜在用户
+  channels:
+    - 在原帖下真诚回复，先理解需求再聊方案
+    - X(Twitter) / 小红书 用关键词搜索同类讨论
+    - 相关垂直社群、QQ/微信群、Discord
+  first_step: 先在原帖回复一句"我也遇到这个问题，正在做个小工具，能聊两句你的具体场景吗"，收集真实需求，不要急着推销。
+
+reddit:
+  audience: 该 subreddit 及相关子版的用户、独立开发者、早期 SaaS 用户
+  channels:
+    - 在原帖/原 subreddit 真诚回复并记录需求
+    - r/SideProject、r/SaaS、r/microsaas 发布进展
+    - IndieHackers 发 Building-in-public 帖
+    - X(Twitter) #buildinpublic #indiehackers
+  first_step: 先在原帖评论区参与讨论建立信任，做出 MVP 后再回到该帖 "Show" 一下，附简单落地页收集邮箱。
+
+hacker news:
+  audience: 技术人群、创始人、早期采用者
+  channels:
+    - 做出 MVP 后发 "Show HN"
+    - 在相关 Ask HN 讨论中分享思路
+    - X(Twitter) 技术圈
+  first_step: 别空手推广。先做能用的 demo + 简短落地页，再发 Show HN，标题写清"解决了什么问题"。
+
+product hunt:
+  audience: 早期采用者、产品猎人、做工具的同行
+  channels:
+    - 正式发布时上 Product Hunt
+    - 提前积累 X / 邮件订阅做发布日导流
+  first_step: 把它当"竞品/灵感"研究：看它解决什么、评论区在抱怨什么，从差评里找你的切入点。
+
+v2ex:
+  audience: 国内程序员、独立开发者、创业者
+  channels:
+    - V2EX "分享创造" 节点发布
+    - 即刻、少数派、小红书 同步
+    - 相关微信群 / QQ 群
+  first_step: 在 V2EX 用"做了个小工具解决XX"风格发帖，态度真诚、附免费试用，国内社区反感硬广。
+
+少数派:
+  audience: 效率工具爱好者、付费意愿较高的国内用户
+  channels:
+    - 投稿少数派 / Matrix 社区
+    - 小红书做使用场景图文
+    - 即刻分享开发故事
+  first_step: 写一篇"我为什么做这个工具 + 怎么用"的体验文，比硬广有效得多。
+
+36氪:
+  audience: 关注创业与行业趋势的读者
+  channels:
+    - 当作趋势研究，判断赛道大小
+  first_step: 主要用于判断方向是否处在上升期，不作为直接获客渠道。
+
+appstore:
+  audience: 移动端付费用户
+  channels:
+    - ASO 关键词优化
+    - 小红书 / 抖音 场景短视频
+  first_step: 研究榜单里同类 App 的差评，差评就是你的产品机会点。
+
+indie hackers:
+  audience: 独立开发者、做副业/小生意的人
+  channels:
+    - IndieHackers 发帖 Building in public
+    - X(Twitter) #buildinpublic
+  first_step: 公开记录你的开发与收入进展，吸引同温层关注与早期用户。

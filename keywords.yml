@@ -1,0 +1,61 @@
+# 痛点关键词库：命中即视为"需求/求助"信号并加权。大小写不敏感。
+# 分组只是为了可读性，打分时合并使用。
+
+# ----- 英文：明确求助 / 需求表达 -----
+en_demand:
+  - "is there a tool"
+  - "is there an app"
+  - "is there a way"
+  - "i wish there was"
+  - "i wish there were"
+  - "looking for a tool"
+  - "looking for an app"
+  - "looking for software"
+  - "recommend a tool"
+  - "any tool that"
+  - "anyone know a"
+  - "how do i automate"
+  - "tired of doing"
+  - "manually doing"
+  - "wastes so much time"
+  - "alternative to"
+  - "cheaper alternative"
+  - "does anyone have a"
+  - "need a simple"
+
+# ----- 英文：付费意愿 / 痛点强度 -----
+en_intent:
+  - "i would pay"
+  - "i'd pay for"
+  - "take my money"
+  - "shut up and take"
+  - "willing to pay"
+
+# ----- 中文：明确求助 / 需求表达 -----
+zh_demand:
+  - "有没有工具"
+  - "有没有什么工具"
+  - "有没有软件"
+  - "有没有app"
+  - "求推荐"
+  - "求一个"
+  - "求工具"
+  - "求软件"
+  - "有没有办法"
+  - "怎么自动化"
+  - "如何批量"
+  - "太麻烦了"
+  - "手动太累"
+  - "浪费时间"
+  - "有没有替代"
+  - "平替"
+  - "求助"
+  - "想要一个"
+  - "做一个工具"
+
+# ----- 中文：付费意愿 -----
+zh_intent:
+  - "我愿意付费"
+  - "愿意花钱"
+  - "可以付费"
+  - "愿意买单"

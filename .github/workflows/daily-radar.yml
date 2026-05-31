@@ -1,0 +1,51 @@
+name: Daily Product Opportunity Radar
+
+on:
+  schedule:
+    # cron 使用 UTC。01:00 UTC = 北京时间 09:00。
+    # 修改时间在这里调整（分 时 日 月 周）。
+    - cron: "0 1 * * *"
+  workflow_dispatch: {}  # 支持在 Actions 页手动触发测试
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run radar and send email
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          ATTACH_FILE: ${{ secrets.ATTACH_FILE }}
+          ATTACH_FORMAT: ${{ secrets.ATTACH_FORMAT }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USER_AGENT: ${{ secrets.REDDIT_USER_AGENT }}
+          PRODUCTHUNT_TOKEN: ${{ secrets.PRODUCTHUNT_TOKEN }}
+          ENABLE_GOOGLE_TRENDS: ${{ secrets.ENABLE_GOOGLE_TRENDS }}
+        run: python -m src.main
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: radar-report
+          path: output/
+          if-no-files-found: ignore
+          retention-days: 14

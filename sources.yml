@@ -1,0 +1,81 @@
+# 信源配置：控制启用哪些源、抓取参数等。修改此文件无需改代码。
+# 所有信源均为官方 API 或官方 RSS，合法合规。
+
+# 每个市场最终展示的机会条数
+top_n_overseas: 12
+top_n_domestic: 8
+
+# 抓取窗口：只保留最近 N 小时内的内容（避免旧帖反复出现）
+recent_hours: 72
+
+collectors:
+  # ---------------- 海外 ----------------
+  hackernews:
+    enabled: true
+    market: overseas
+    # HN Algolia 官方 Search API。抓取关键词命中的 story/ask
+    queries:
+      - "is there a tool"
+      - "i wish there was"
+      - "looking for an app"
+      - "recommend a tool"
+      - "alternative to"
+    hits_per_query: 20
+    min_points: 3
+
+  reddit:
+    enabled: true
+    market: overseas
+    # 需要在 .env 配置 REDDIT_CLIENT_ID / SECRET，否则自动跳过
+    subreddits:
+      - SaaS
+      - SomebodyMakeThis
+      - Entrepreneur
+      - sideproject
+      - microsaas
+      - Business_Ideas
+    listing: top        # top / hot / new
+    time_filter: day     # 仅 listing=top 时生效：day / week
+    limit_per_sub: 15
+
+  producthunt:
+    enabled: true        # 需要在 .env 配置 PRODUCTHUNT_TOKEN，否则自动跳过
+    market: overseas
+    limit: 20
+
+  rss_overseas:
+    enabled: true
+    market: overseas
+    feeds:
+      - name: Indie Hackers
+        url: https://www.indiehackers.com/feed.xml
+      - name: Hacker News Show
+        url: https://hnrss.org/show
+
+  # ---------------- 国内 ----------------
+  v2ex:
+    enabled: true
+    market: domestic
+    # V2EX 官方 API：节点最热主题
+    nodes:
+      - create      # 分享创造
+      - ideas       # 奇思妙想
+      - apple
+    limit_per_node: 15
+
+  appstore:
+    enabled: true
+    market: domestic
+    # Apple 官方 iTunes RSS 免费榜
+    country: cn        # 国家区：cn / us
+    feed: topfreeapplications
+    limit: 20
+
+  rss_domestic:
+    enabled: true
+    market: domestic
+    feeds:
+      - name: 少数派
+        url: https://sspai.com/feed
+      - name: 36氪
+        url: https://www.36kr.com/feed
