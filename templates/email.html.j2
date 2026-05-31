@@ -11,68 +11,94 @@
     <!-- 头部 -->
     <div style="background:linear-gradient(135deg,#2b5cff,#7b3cff);border-radius:14px;padding:22px 20px;color:#ffffff;">
       <div style="font-size:22px;font-weight:700;">产品机会雷达</div>
-      <div style="font-size:13px;opacity:.9;margin-top:6px;">{{ date_str }} · 今日共 {{ total }} 条机会 · 数据来自官方 API / RSS</div>
+      <div style="font-size:13px;opacity:.9;margin-top:6px;">
+        {{ date_str }} · 真实需求 {{ total }} 条 · 趋势参考 {{ ref_total }} 条
+        {% if llm_used %}· AI 智能研判已开启{% else %}· 关键词模式{% endif %}
+      </div>
     </div>
 
+    {# ---------- 真实需求机会卡片 ---------- #}
     {% macro card(s, idx) -%}
     <div style="background:#ffffff;border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);">
-      <!-- 标题行 -->
+      <!-- 重述后的机会（核心） -->
+      {% if s.restated %}
+      <div style="font-size:16px;font-weight:700;line-height:1.5;color:#0b1b3f;">
+        {{ idx }}. {{ s.restated }}
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:#8a8f99;line-height:1.45;">原文：{{ s.title }}</div>
+      {% else %}
       <div style="font-size:16px;font-weight:600;line-height:1.45;color:#1f2329;">
         {{ idx }}. {{ s.title }}
       </div>
+      {% endif %}
+
       <!-- 元信息 -->
       <div style="margin-top:8px;font-size:12px;color:#646a73;">
         <span style="display:inline-block;background:#eef1ff;color:#2b5cff;border-radius:4px;padding:2px 8px;font-weight:600;">来源：{{ s.source }}</span>
-        <span style="display:inline-block;background:#f2f3f5;border-radius:4px;padding:2px 8px;margin-left:6px;">类别：{{ s.category }}</span>
-        <span style="display:inline-block;background:#f2f3f5;border-radius:4px;padding:2px 8px;margin-left:6px;">机会分：{{ '%.1f'|format(s.score) }}</span>
+        {% if s.demand_strength %}<span style="display:inline-block;background:#fff0e6;color:#d9480f;border-radius:4px;padding:2px 8px;margin-left:6px;font-weight:600;">需求强度 {{ s.demand_strength }}</span>{% endif %}
+        {% if s.suggested_form %}<span style="display:inline-block;background:#e6fffb;color:#08979c;border-radius:4px;padding:2px 8px;margin-left:6px;">建议形态：{{ s.suggested_form }}</span>{% endif %}
         {% if s.engagement %}<span style="margin-left:6px;">▲ {{ s.engagement }}</span>{% endif %}
         {% if s.comments %}<span style="margin-left:6px;">💬 {{ s.comments }}</span>{% endif %}
       </div>
-      {% if s.matched_keywords %}
-      <div style="margin-top:8px;font-size:12px;color:#d9480f;">
-        命中需求词：{{ s.matched_keywords | join(' / ') }}
-      </div>
+
+      {% if s.llm_reason %}
+      <div style="margin-top:8px;font-size:12px;color:#4e5969;line-height:1.5;">研判：{{ s.llm_reason }}</div>
+      {% elif s.summary %}
+      <div style="margin-top:8px;font-size:13px;color:#4e5969;line-height:1.5;">{{ s.summary[:160] }}{% if s.summary|length > 160 %}…{% endif %}</div>
       {% endif %}
-      {% if s.summary %}
-      <div style="margin-top:8px;font-size:13px;color:#4e5969;line-height:1.5;">
-        {{ s.summary[:160] }}{% if s.summary|length > 160 %}…{% endif %}
-      </div>
-      {% endif %}
+
       <!-- 溯源链接 -->
       {% if s.url %}
       <div style="margin-top:10px;">
         <a href="{{ s.url }}" style="display:inline-block;background:#2b5cff;color:#fff;text-decoration:none;font-size:13px;font-weight:600;border-radius:6px;padding:8px 14px;">查看原文（溯源）→</a>
       </div>
       {% endif %}
+
       <!-- 推广提示 -->
       {% if s.promo_hint %}
       <div style="margin-top:12px;background:#f7faf5;border-left:3px solid #52c41a;border-radius:6px;padding:10px 12px;font-size:12px;color:#3c4043;">
         <div style="font-weight:600;color:#237804;">推广提示（新手）</div>
         {% if s.promo_hint.audience %}<div style="margin-top:4px;">目标人群：{{ s.promo_hint.audience }}</div>{% endif %}
-        {% if s.promo_hint.channels %}
-        <div style="margin-top:4px;">渠道：{{ s.promo_hint.channels | join(' · ') }}</div>
-        {% endif %}
+        {% if s.promo_hint.channels %}<div style="margin-top:4px;">渠道：{{ s.promo_hint.channels | join(' · ') }}</div>{% endif %}
         {% if s.promo_hint.first_step %}<div style="margin-top:4px;">第一步：{{ s.promo_hint.first_step }}</div>{% endif %}
       </div>
       {% endif %}
     </div>
     {%- endmacro %}
 
-    <!-- 海外 -->
+    {# ---------- 趋势/灵感参考（紧凑行） ---------- #}
+    {% macro ref_row(s) -%}
+    <div style="padding:10px 0;border-top:1px solid #f0f0f0;font-size:13px;color:#1f2329;line-height:1.5;">
+      <a href="{{ s.url }}" style="color:#1f2329;text-decoration:none;font-weight:600;">{{ s.title }}</a>
+      <span style="display:inline-block;background:#f2f3f5;color:#646a73;border-radius:4px;padding:1px 6px;margin-left:6px;font-size:11px;">{{ s.source }}</span>
+    </div>
+    {%- endmacro %}
+
+    <!-- 海外机会 -->
     {% if overseas %}
-    <div style="margin-top:22px;font-size:17px;font-weight:700;color:#1f2329;">🌍 海外机会（{{ overseas|length }}）</div>
+    <div style="margin-top:22px;font-size:17px;font-weight:700;color:#1f2329;">🌍 海外·真实需求（{{ overseas|length }}）</div>
     {% for s in overseas %}{{ card(s, loop.index) }}{% endfor %}
     {% endif %}
 
-    <!-- 国内 -->
+    <!-- 国内机会 -->
     {% if domestic %}
-    <div style="margin-top:24px;font-size:17px;font-weight:700;color:#1f2329;">🇨🇳 国内机会（{{ domestic|length }}）</div>
+    <div style="margin-top:24px;font-size:17px;font-weight:700;color:#1f2329;">🇨🇳 国内·真实需求（{{ domestic|length }}）</div>
     {% for s in domestic %}{{ card(s, loop.index) }}{% endfor %}
     {% endif %}
 
     {% if not overseas and not domestic %}
     <div style="background:#fff;border-radius:12px;padding:20px;margin-top:16px;text-align:center;color:#646a73;">
-      今天没有抓到符合条件的机会，可能是信源临时不可用或筛选条件偏严。可在 sources.yml 调整。
+      今天没有筛出达标的真实需求（宁缺毋滥）。可看下方"趋势参考"，或在 sources.yml 调低阈值/扩信源。
+    </div>
+    {% endif %}
+
+    <!-- 趋势/灵感参考区 -->
+    {% if ref_overseas or ref_domestic %}
+    <div style="margin-top:26px;font-size:17px;font-weight:700;color:#1f2329;">💡 趋势 / 灵感参考</div>
+    <div style="font-size:12px;color:#969ba3;margin-top:4px;">新品发布、榜单、资讯——不是直接需求，用于看赛道与找差评切入点。</div>
+    <div style="background:#ffffff;border-radius:12px;padding:8px 16px 14px;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);">
+      {% if ref_overseas %}<div style="margin-top:8px;font-size:13px;font-weight:700;color:#2b5cff;">海外</div>{% for s in ref_overseas %}{{ ref_row(s) }}{% endfor %}{% endif %}
+      {% if ref_domestic %}<div style="margin-top:12px;font-size:13px;font-weight:700;color:#2b5cff;">国内</div>{% for s in ref_domestic %}{{ ref_row(s) }}{% endfor %}{% endif %}
     </div>
     {% endif %}
 

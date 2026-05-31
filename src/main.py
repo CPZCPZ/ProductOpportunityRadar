@@ -15,8 +15,9 @@ from datetime import datetime
 from .collectors import build_collectors
 from .config import Config
 from .dedupe import dedupe
+from .llm import judge_signals
 from .render import render_html, save_html
-from .scoring import rank_by_market, score_all
+from .scoring import rank_opportunities, rank_reference, score_all
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,13 +46,54 @@ def run(dry_run: bool = False) -> int:
     all_signals = dedupe(all_signals)
     logger.info("去重后 %d 条", len(all_signals))
 
+    # 关键词预筛打分（含负向词降权）
     score_all(all_signals, config)
-    overseas, domestic = rank_by_market(
-        all_signals, config.top_n_overseas, config.top_n_domestic
-    )
-    logger.info("入选：海外 %d / 国内 %d", len(overseas), len(domestic))
 
-    html = render_html(overseas, domestic, config, source_errors=source_errors)
+    # 按 kind 拆分：需求候选 vs 趋势参考
+    demand_candidates = [s for s in all_signals if s.kind == "demand"]
+    reference_items = [s for s in all_signals if s.kind == "reference"]
+    logger.info(
+        "需求候选 %d / 趋势参考 %d", len(demand_candidates), len(reference_items)
+    )
+
+    # 需求候选 -> LLM 智能研判（预筛排序后截断到预算上限以控制成本）
+    demand_candidates.sort(key=lambda s: s.score, reverse=True)
+    budget = config.llm_max_candidates
+    to_judge = demand_candidates[:budget]
+
+    llm_used = False
+    if config.llm_ready():
+        kept = judge_signals(to_judge, config)
+        if kept:
+            llm_used = True
+            opp_pool = kept
+        else:
+            logger.warning("LLM 不可用或无结果，降级为关键词模式")
+            opp_pool = to_judge
+    else:
+        logger.info("未配置 DeepSeek，使用关键词模式（建议配置以提升质量）")
+        opp_pool = to_judge
+
+    overseas, domestic = rank_opportunities(
+        opp_pool, config.top_n_overseas, config.top_n_domestic
+    )
+    ref_overseas, ref_domestic = rank_reference(
+        reference_items, config.top_n_reference
+    )
+    logger.info(
+        "入选机会：海外 %d / 国内 %d；参考：海外 %d / 国内 %d",
+        len(overseas), len(domestic), len(ref_overseas), len(ref_domestic),
+    )
+
+    html = render_html(
+        overseas,
+        domestic,
+        config,
+        ref_overseas=ref_overseas,
+        ref_domestic=ref_domestic,
+        llm_used=llm_used,
+        source_errors=source_errors,
+    )
 
     date_str = datetime.now().strftime("%Y-%m-%d")
     if dry_run:

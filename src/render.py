@@ -51,8 +51,13 @@ def render_html(
     overseas: list[Signal],
     domestic: list[Signal],
     config: Config,
+    ref_overseas: list[Signal] | None = None,
+    ref_domestic: list[Signal] | None = None,
+    llm_used: bool = False,
     source_errors: list[dict] | None = None,
 ) -> str:
+    ref_overseas = ref_overseas or []
+    ref_domestic = ref_domestic or []
     promotion = config.promotion or {}
     for sig in overseas + domestic:
         sig.promo_hint = _promo_for(sig, promotion)
@@ -66,10 +71,14 @@ def render_html(
         date_str=datetime.now().strftime("%Y-%m-%d"),
         overseas=overseas,
         domestic=domestic,
+        ref_overseas=ref_overseas,
+        ref_domestic=ref_domestic,
+        llm_used=llm_used,
         cold_start_steps=COLD_START_STEPS,
         promo_table=promo_table,
         source_errors=source_errors or [],
         total=len(overseas) + len(domestic),
+        ref_total=len(ref_overseas) + len(ref_domestic),
     )
 
 

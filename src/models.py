@@ -19,6 +19,7 @@ class Signal:
     url: str                          # 原帖直达链接（溯源用）
     market: str = "overseas"          # overseas / domestic
     source_type: str = "api"          # api / rss
+    kind: str = "demand"              # demand(需求候选) / reference(趋势灵感参考)
     engagement: int = 0               # 点赞/投票/分数
     comments: int = 0                 # 评论数
     created_at: datetime | None = None  # 原文发布时间 (UTC)
@@ -28,6 +29,13 @@ class Signal:
     matched_keywords: list[str] = field(default_factory=list)
     category: str = "趋势"             # 求助 / 新品 / 趋势
     score: float = 0.0
+
+    # 由 LLM 研判阶段填充
+    is_opportunity: bool = False      # 是否为真实产品需求
+    demand_strength: int = 0          # 需求强度+商业可行性 0-100
+    restated: str = ""                # 把需求重述为一句"产品机会"
+    suggested_form: str = ""          # 建议做成的形态（插件/SaaS/脚本/App…）
+    llm_reason: str = ""              # 研判理由（简短）
 
     # 由渲染阶段填充（来自 promotion.yml）
     promo_hint: dict = field(default_factory=dict)

@@ -63,8 +63,24 @@ class Config:
         # ---- Product Hunt ----
         self.producthunt_token = os.getenv("PRODUCTHUNT_TOKEN", "").strip()
 
+        # ---- LLM 智能研判 (DeepSeek，OpenAI 兼容) ----
+        self.deepseek_api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+        self.deepseek_base_url = os.getenv(
+            "DEEPSEEK_BASE_URL", "https://api.deepseek.com"
+        ).strip().rstrip("/")
+        self.deepseek_model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat").strip()
+        # 需求强度阈值：低于此分的候选不进入"真实需求"区
+        self.llm_min_strength = int(os.getenv("LLM_MIN_STRENGTH", "55"))
+        # 单次运行送入 LLM 的最大候选数（控制成本）
+        self.llm_max_candidates = int(os.getenv("LLM_MAX_CANDIDATES", "80"))
+        # 每批送入 LLM 的条数
+        self.llm_batch_size = int(os.getenv("LLM_BATCH_SIZE", "12"))
+
         # ---- 可选 ----
         self.enable_google_trends = _bool(os.getenv("ENABLE_GOOGLE_TRENDS"), False)
+
+        # 趋势/灵感参考区每个市场展示条数
+        self.top_n_reference = int(self.sources.get("top_n_reference", 6))
 
         # ---- 通用参数 ----
         self.top_n_overseas = int(self.sources.get("top_n_overseas", 12))
@@ -76,12 +92,20 @@ class Config:
         return self.sources.get("collectors", {})
 
     def keyword_list(self) -> list[str]:
-        """把 keywords.yml 各分组拍平成一个列表（全部小写）。"""
+        """把 keywords.yml 各分组（除 negative）拍平成一个列表（全部小写）。"""
         out: list[str] = []
-        for group in self.keywords.values():
+        for name, group in self.keywords.items():
+            if name == "negative":
+                continue
             if isinstance(group, list):
                 out.extend(str(k).lower() for k in group)
         return out
+
+    def negative_keywords(self) -> list[str]:
+        group = self.keywords.get("negative", [])
+        if isinstance(group, list):
+            return [str(k).lower() for k in group]
+        return []
 
     def smtp_ready(self) -> bool:
         return bool(self.smtp_host and self.smtp_user and self.smtp_pass and self.mail_to)
@@ -91,3 +115,6 @@ class Config:
 
     def producthunt_ready(self) -> bool:
         return bool(self.producthunt_token)
+
+    def llm_ready(self) -> bool:
+        return bool(self.deepseek_api_key)

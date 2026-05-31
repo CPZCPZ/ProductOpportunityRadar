@@ -32,10 +32,13 @@ class Collector:
     name: str = "Collector"
     market: str = "overseas"
 
+    kind: str = "demand"
+
     def __init__(self, cfg: dict[str, Any], config) -> None:
         self.cfg = cfg or {}
         self.config = config
         self.market = self.cfg.get("market", self.market)
+        self.kind = self.cfg.get("kind", self.kind)
         self.last_error: str | None = None
 
     # ---- 子类实现 ----
@@ -46,6 +49,10 @@ class Collector:
     def collect(self) -> list[Signal]:
         try:
             signals = self.fetch() or []
+            # 统一打 kind 标签（RSS 等可能已按 feed 设置，则不覆盖）
+            for sig in signals:
+                if not getattr(sig, "_kind_set", False):
+                    sig.kind = self.kind
             logger.info("[%s] 采集到 %d 条", self.name, len(signals))
             return signals
         except Exception as exc:  # noqa: BLE001 - 故意捕获所有异常做降级

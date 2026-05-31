@@ -31,6 +31,7 @@ class RSSCollector(Collector):
         for feed in feeds:
             url = feed.get("url")
             label = feed.get("name", self.name)
+            feed_kind = feed.get("kind", self.kind)
             if not url:
                 continue
             parsed = feedparser.parse(url, agent=DEFAULT_UA)
@@ -46,19 +47,20 @@ class RSSCollector(Collector):
                 summary = getattr(entry, "summary", "") or ""
                 # 去掉 RSS 摘要里的 HTML 标签的简单处理
                 summary = _strip_html(summary)[:500]
-                signals.append(
-                    Signal(
-                        source=label,
-                        market=self.market,
-                        source_type="rss",
-                        title=title,
-                        url=getattr(entry, "link", "") or "",
-                        engagement=0,
-                        comments=0,
-                        created_at=created,
-                        summary=summary,
-                    )
+                sig = Signal(
+                    source=label,
+                    market=self.market,
+                    source_type="rss",
+                    kind=feed_kind,
+                    title=title,
+                    url=getattr(entry, "link", "") or "",
+                    engagement=0,
+                    comments=0,
+                    created_at=created,
+                    summary=summary,
                 )
+                sig._kind_set = True  # 已按 feed 设置，避免 base 覆盖
+                signals.append(sig)
         return signals
 
     @staticmethod

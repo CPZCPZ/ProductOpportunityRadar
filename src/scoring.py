@@ -41,7 +41,16 @@ def _match_keywords(signal: Signal, keywords: list[str]) -> list[str]:
     return [kw for kw in keywords if kw and kw in text]
 
 
-def score_signal(signal: Signal, keywords: list[str], recent_hours: int) -> Signal:
+# 命中负向词的惩罚（用于关键词预筛排序，降低个人求助/纯发布的优先级）
+W_NEGATIVE = 2.5
+
+
+def score_signal(
+    signal: Signal,
+    keywords: list[str],
+    recent_hours: int,
+    negatives: list[str] | None = None,
+) -> Signal:
     matched = _match_keywords(signal, keywords)
     signal.matched_keywords = matched
     signal.category = _detect_category(signal, matched)
@@ -54,11 +63,17 @@ def score_signal(signal: Signal, keywords: list[str], recent_hours: int) -> Sign
 
     category_w = CATEGORY_WEIGHT.get(signal.category, 0.2)
 
+    neg_hits = 0
+    if negatives:
+        text = signal.text_for_matching()
+        neg_hits = sum(1 for kw in negatives if kw and kw in text)
+
     signal.score = round(
         W_HEAT * heat
         + W_KEYWORD * keyword_score
         + W_RECENCY * recency
-        + W_CATEGORY * category_w,
+        + W_CATEGORY * category_w
+        - W_NEGATIVE * neg_hits,
         3,
     )
     return signal
@@ -66,9 +81,47 @@ def score_signal(signal: Signal, keywords: list[str], recent_hours: int) -> Sign
 
 def score_all(signals: list[Signal], config: Config) -> list[Signal]:
     keywords = config.keyword_list()
+    negatives = config.negative_keywords()
     for signal in signals:
-        score_signal(signal, keywords, config.recent_hours)
+        score_signal(signal, keywords, config.recent_hours, negatives)
     return signals
+
+
+def rank_reference(
+    signals: list[Signal], top_per_market: int
+) -> tuple[list[Signal], list[Signal]]:
+    """趋势/灵感参考区：按热度+时效排序，不经过 LLM。"""
+    overseas = sorted(
+        (s for s in signals if s.market == "overseas"),
+        key=lambda s: s.score,
+        reverse=True,
+    )[:top_per_market]
+    domestic = sorted(
+        (s for s in signals if s.market == "domestic"),
+        key=lambda s: s.score,
+        reverse=True,
+    )[:top_per_market]
+    return overseas, domestic
+
+
+def rank_opportunities(
+    signals: list[Signal], top_overseas: int, top_domestic: int
+) -> tuple[list[Signal], list[Signal]]:
+    """真实需求区：优先按 LLM 需求强度排序，其次关键词分。"""
+    def sort_key(s: Signal):
+        return (s.demand_strength, s.score)
+
+    overseas = sorted(
+        (s for s in signals if s.market == "overseas"),
+        key=sort_key,
+        reverse=True,
+    )[:top_overseas]
+    domestic = sorted(
+        (s for s in signals if s.market == "domestic"),
+        key=sort_key,
+        reverse=True,
+    )[:top_domestic]
+    return overseas, domestic
 
 
 def rank_by_market(

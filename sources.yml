@@ -1,11 +1,17 @@
 # 信源配置：控制启用哪些源、抓取参数等。修改此文件无需改代码。
 # 所有信源均为官方 API 或官方 RSS，合法合规。
+#
+# kind 字段决定该源进入哪个区：
+#   demand    = 需求候选，会经过 LLM 智能研判，进入"今日真实需求机会"区
+#   reference = 趋势/灵感参考（新品发布、榜单、资讯），单独成区，不冒充需求
 
-# 每个市场最终展示的机会条数
+# 每个市场最终展示的"真实需求机会"条数
 top_n_overseas: 12
 top_n_domestic: 8
+# "趋势/灵感参考"区每个市场展示条数
+top_n_reference: 6
 
-# 抓取窗口：只保留最近 N 小时内的内容（避免旧帖反复出现）
+# 抓取窗口：只保留最近 N 小时内的内容
 recent_hours: 72
 
 collectors:
@@ -13,20 +19,23 @@ collectors:
   hackernews:
     enabled: true
     market: overseas
+    kind: demand
     # HN Algolia 官方 Search API。抓取关键词命中的 story/ask
     queries:
       - "is there a tool"
       - "i wish there was"
       - "looking for an app"
       - "recommend a tool"
-      - "alternative to"
-    hits_per_query: 20
-    min_points: 3
+      - "how do i automate"
+      - "anyone know a tool"
+      - "tired of doing"
+    hits_per_query: 25
+    min_points: 2
 
   reddit:
     enabled: true
     market: overseas
-    # 需要在 .env 配置 REDDIT_CLIENT_ID / SECRET，否则自动跳过
+    kind: demand
     subreddits:
       - SaaS
       - SomebodyMakeThis
@@ -34,13 +43,14 @@ collectors:
       - sideproject
       - microsaas
       - Business_Ideas
-    listing: top        # top / hot / new
-    time_filter: day     # 仅 listing=top 时生效：day / week
+    listing: top
+    time_filter: day
     limit_per_sub: 15
 
   producthunt:
-    enabled: true        # 需要在 .env 配置 PRODUCTHUNT_TOKEN，否则自动跳过
+    enabled: true
     market: overseas
+    kind: reference        # 新品发布 -> 灵感/竞品参考
     limit: 20
 
   rss_overseas:
@@ -49,25 +59,27 @@ collectors:
     feeds:
       - name: Indie Hackers
         url: https://www.indiehackers.com/feed.xml
+        kind: demand        # IH 帖子常含真实需求/经验
       - name: Hacker News Show
         url: https://hnrss.org/show
+        kind: reference     # Show HN 是发布 -> 参考
 
   # ---------------- 国内 ----------------
   v2ex:
     enabled: true
     market: domestic
-    # V2EX 官方 API：节点最热主题
+    kind: demand
     nodes:
-      - create      # 分享创造
-      - ideas       # 奇思妙想
+      - create
+      - ideas
       - apple
     limit_per_node: 15
 
   appstore:
     enabled: true
     market: domestic
-    # Apple 官方 iTunes RSS 免费榜
-    country: cn        # 国家区：cn / us
+    kind: reference        # 榜单 -> 市场/趋势参考
+    country: cn
     feed: topfreeapplications
     limit: 20
 
@@ -77,5 +89,7 @@ collectors:
     feeds:
       - name: 少数派
         url: https://sspai.com/feed
+        kind: reference
       - name: 36氪
         url: https://www.36kr.com/feed
+        kind: reference
