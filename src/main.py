@@ -15,6 +15,7 @@ from datetime import datetime
 from .collectors import build_collectors
 from .config import Config
 from .dedupe import dedupe
+from . import history
 from .llm import judge_signals
 from .render import render_html, save_html
 from .scoring import rank_opportunities, rank_reference, score_all
@@ -52,6 +53,19 @@ def run(dry_run: bool = False) -> int:
     # 按 kind 拆分：需求候选 vs 趋势参考
     demand_candidates = [s for s in all_signals if s.kind == "demand"]
     reference_items = [s for s in all_signals if s.kind == "reference"]
+
+    # 跨天去重：剔除历史已发送过的条目，保证每天只看到"新增"
+    if config.dedupe_across_days:
+        seen = history.load_seen()
+        before = (len(demand_candidates), len(reference_items))
+        demand_candidates = history.filter_unseen(demand_candidates, seen)
+        reference_items = history.filter_unseen(reference_items, seen)
+        logger.info(
+            "跨天去重：需求 %d→%d，参考 %d→%d（历史库 %d 条）",
+            before[0], len(demand_candidates),
+            before[1], len(reference_items), len(seen),
+        )
+
     logger.info(
         "需求候选 %d / 趋势参考 %d", len(demand_candidates), len(reference_items)
     )
@@ -108,6 +122,13 @@ def run(dry_run: bool = False) -> int:
 
     subject = f"产品机会雷达 {date_str} · {len(overseas) + len(domestic)} 条机会"
     send_email(html, config, subject)
+
+    # 发送成功后：归档当日日报 + 记录已发送 URL（供跨天去重与历史回溯）
+    sent_items = overseas + domestic + ref_overseas + ref_domestic
+    try:
+        history.persist(html, sent_items, date_str, config.history_retention_days)
+    except Exception as exc:  # noqa: BLE001 - 历史写入失败不影响主流程
+        logger.warning("写入历史失败（不影响发信）：%s", exc)
     return 0
 
 

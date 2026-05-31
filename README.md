@@ -76,10 +76,15 @@ python -m src.main --dry-run
 2. 仓库 `Settings → Secrets and variables → Actions → New repository secret`，添加：
    - `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASS` `MAIL_TO`
    - 可选：`REDDIT_CLIENT_ID` `REDDIT_CLIENT_SECRET` `REDDIT_USER_AGENT` `PRODUCTHUNT_TOKEN` `ATTACH_FILE`
-3. 工作流 `.github/workflows/daily-radar.yml` 已配好定时（默认每天北京时间 09:00）。修改里面的 `cron` 可调整时间（注意 cron 用 UTC）。
+3. 工作流 `.github/workflows/daily-radar.yml` 已配好定时（默认每天**北京时间 07:00**，即 `cron: "0 23 * * *"` UTC）。修改里面的 `cron` 可调整时间（注意 cron 用 UTC，北京时间 = UTC+8）。
 4. 进 `Actions` 页可手动点 `Run workflow` 立即测试一次。
 
-> 注意：GitHub 规定**仓库连续 60 天无提交活动会自动暂停定时任务**。偶尔提交一次（或让日报本身提交一个 run 记录）即可保持激活。
+> 关于"60 天无活动自动暂停"：已内置**自动保活**——每天运行后会把当日日报存档提交回仓库（`history/`），仓库持续有提交活动，定时任务不会被暂停，你无需手动干预。
+
+## 历史回溯与跨天去重
+
+- **跨天去重**：每天只推送"新增"机会，已发送过的条目（记录在 `history/seen.json`）不再重复出现。保留天数由 `HISTORY_RETENTION_DAYS`（默认 60）控制；如需关闭去重设 `DEDUPE_ACROSS_DAYS=false`。
+- **历史存档**：每天的完整日报存到 `history/reports/YYYY-MM-DD.html`，索引见 `history/README.md`。随时可在 GitHub 仓库里翻看历史每天发了什么。
 
 ---
 

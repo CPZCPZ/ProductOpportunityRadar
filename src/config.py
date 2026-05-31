@@ -82,6 +82,11 @@ class Config:
         # 趋势/灵感参考区每个市场展示条数
         self.top_n_reference = int(self.sources.get("top_n_reference", 6))
 
+        # 跨天去重：历史保留天数（超过则从去重库裁剪）
+        self.history_retention_days = int(os.getenv("HISTORY_RETENTION_DAYS", "60"))
+        # 是否启用跨天去重（默认开）
+        self.dedupe_across_days = _bool(os.getenv("DEDUPE_ACROSS_DAYS"), True)
+
         # ---- 通用参数 ----
         self.top_n_overseas = int(self.sources.get("top_n_overseas", 12))
         self.top_n_domestic = int(self.sources.get("top_n_domestic", 8))

@@ -2,10 +2,13 @@ name: Daily Product Opportunity Radar
 
 on:
   schedule:
-    # cron 使用 UTC。01:00 UTC = 北京时间 09:00。
+    # cron 使用 UTC。23:00 UTC = 次日北京时间 07:00（北京 = UTC+8）。
     # 修改时间在这里调整（分 时 日 月 周）。
-    - cron: "0 1 * * *"
+    - cron: "0 23 * * *"
   workflow_dispatch: {}  # 支持在 Actions 页手动触发测试
+
+permissions:
+  contents: write  # 允许把每日历史归档提交回仓库（顺带保活）
 
 jobs:
   radar:
@@ -46,6 +49,20 @@ jobs:
           LLM_MAX_CANDIDATES: ${{ secrets.LLM_MAX_CANDIDATES }}
           LLM_BATCH_SIZE: ${{ secrets.LLM_BATCH_SIZE }}
         run: python -m src.main
+
+      - name: Commit daily history back to repo (archive + keepalive)
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p history
+          git add history/
+          if git diff --staged --quiet; then
+            echo "No history changes to commit."
+          else
+            git commit -m "chore: 每日机会归档 $(date -u +%F)"
+            git push
+          fi
 
       - name: Upload report artifact
         if: always()
