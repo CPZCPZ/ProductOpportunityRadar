@@ -39,6 +39,12 @@ jobs:
           REDDIT_USER_AGENT: ${{ secrets.REDDIT_USER_AGENT }}
           PRODUCTHUNT_TOKEN: ${{ secrets.PRODUCTHUNT_TOKEN }}
           ENABLE_GOOGLE_TRENDS: ${{ secrets.ENABLE_GOOGLE_TRENDS }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
+          DEEPSEEK_MODEL: ${{ secrets.DEEPSEEK_MODEL }}
+          LLM_MIN_STRENGTH: ${{ secrets.LLM_MIN_STRENGTH }}
+          LLM_MAX_CANDIDATES: ${{ secrets.LLM_MAX_CANDIDATES }}
+          LLM_BATCH_SIZE: ${{ secrets.LLM_BATCH_SIZE }}
         run: python -m src.main
 
       - name: Upload report artifact
