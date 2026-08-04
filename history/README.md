@@ -4,6 +4,7 @@
 
 | 日期 | 存档 |
 | --- | --- |
+| 2026-08-04 | [查看 reports/2026-08-04.html](reports/2026-08-04.html) |
 | 2026-08-02 | [查看 reports/2026-08-02.html](reports/2026-08-02.html) |
 | 2026-08-01 | [查看 reports/2026-08-01.html](reports/2026-08-01.html) |
 | 2026-07-31 | [查看 reports/2026-07-31.html](reports/2026-07-31.html) |
